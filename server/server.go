@@ -101,7 +101,7 @@ func StartAsync(addr string, s *store.Store) {
 				_, err = unix.Kevent(kqFD,[]unix.Kevent_t{clientEvent},nil,nil)
 
 			} else {
-				handleClientFd(fd, kqFD, s)
+				handleClientFd(fd, s)
 			}
 		}
 	}

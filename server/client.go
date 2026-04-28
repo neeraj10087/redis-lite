@@ -36,11 +36,11 @@ func handleClient(conn net.Conn, s *store.Store) {
 	}
 }
 
-func handleClientFd(fd int, kqFd int, s *store.Store) {
+func handleClientFd(fd int, s *store.Store) {
 	buf := make([]byte, 1024)
 	n, err := unix.Read(fd, buf)
 
-	if (err != nil || n == 0) {
+	if err != nil || n == 0 {
 		unix.Close(fd)
 		return
 	}
@@ -48,7 +48,7 @@ func handleClientFd(fd int, kqFd int, s *store.Store) {
 	reader := bufio.NewReader(strings.NewReader(string(buf[:n])))
 	value, err := resp.Parse(reader)
 
-	if (err != nil || len(value.Array) == 0) {
+	if err != nil || len(value.Array) == 0 {
 		unix.Close(fd)
 		return
 	}

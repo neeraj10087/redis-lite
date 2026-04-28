@@ -10,8 +10,9 @@ type HandlerFunc func(args []resp.Value, s *store.Store) resp.Value
 
 var handlers = map[string]HandlerFunc{
 	"PING": pingHandler,
-	"GET": getHandler,
-	"SET": setHandler,
+	"GET":  getHandler,
+	"SET":  setHandler,
+	"TTL":  ttlHandler,
 }
 
 func Dispatch(cmd string, args []resp.Value, s *store.Store) resp.Value {
