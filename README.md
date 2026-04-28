@@ -5,7 +5,7 @@ A basic Redis server built from scratch in Go.
 ## Features
 - RESP protocol parser
 - kqueue-based async event loop (macOS)
-- Supported commands: PING, SET, GET
+- Supported commands for now: PING, SET, GET
 
 ## Run
 
