@@ -2,11 +2,16 @@ package server
 
 import (
 	"fmt"
+	"log"
 	"net"
 	"redis-lite/store"
+	"time"
 	"golang.org/x/sys/unix"
-	"log"
 )
+
+var deleteCronFreq = 1 * time.Second
+var lastCronRun time.Time = time.Now()
+
 
 func Start(addr string, s *store.Store) {
 	listener, err := net.Listen("tcp", addr)
@@ -74,8 +79,15 @@ func StartAsync(addr string, s *store.Store) {
 	}
 
 	// fmt.Println("registered server socket with kqueue")
+	currentClients := 0
 
 	for {
+
+		if time.Now().After(lastCronRun.Add(deleteCronFreq)){
+			store.DeleteExpiredKeys(s)
+			lastCronRun = time.Now()
+		}
+
 		nevents, err := unix.Kevent(kqFD, nil, events, nil)
 		// fmt.Println("recieved events from kqueue")
 		if err != nil {
@@ -85,23 +97,21 @@ func StartAsync(addr string, s *store.Store) {
 		for i:=0 ; i < nevents; i++ {
 			fd := int(events[i].Ident)
 			if (fd == serverFD){
-				// event is from server fd 
-				// this for a new connection
 				clientFd, _, err := unix.Accept(serverFD)
 				if err != nil {
                 	log.Println("accept error:", err)
                     continue
                 }
+				currentClients++
+				fmt.Println("client connected, total:", currentClients)
 
 				unix.SetNonblock(clientFd,true)
 
-				// register this client fd in kqueue
 				clientEvent := unix.Kevent_t{Ident: uint64(clientFd), Filter: unix.EVFILT_READ, Flags: unix.EV_ADD}
-
 				_, err = unix.Kevent(kqFD,[]unix.Kevent_t{clientEvent},nil,nil)
 
 			} else {
-				handleClientFd(fd, s)
+				handleClientFd(fd, s,&currentClients)
 			}
 		}
 	}

@@ -5,7 +5,8 @@ A basic Redis server built from scratch in Go.
 ## Features
 - RESP protocol parser
 - kqueue-based async event loop (macOS)
-- Supported commands for now: PING, SET, GET, TTL
+- Supported commands for now: PING, SET, GET, TTL, DEL, EXPIRE
+- Supports ACTIVE and PASSIVE mode key deletion
 
 ## Run
 

@@ -35,6 +35,7 @@ func (s *Store) Get(key string) (interface{}, bool) {
 	}
 
 	if entry.HasExpiry && time.Now().After(entry.ExpiresAt) {
+		s.Delete(key)
 		return nil, false
 	}
 	return entry.Value, ok
@@ -57,7 +58,7 @@ func (s *Store) TTL(key string) (int) {
 	entry, ok := s.data[key]
 
 	if (!ok) {
-		return -2
+		return 0
 	}
 
 	if (!entry.HasExpiry) {

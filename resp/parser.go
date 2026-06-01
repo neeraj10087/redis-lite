@@ -1,7 +1,11 @@
 package resp
 
-import "bufio"
-import "strconv"
+import (
+	"bufio"
+	"fmt"
+	"strconv"
+	"strings"
+)
 
 // # Prefix | Type            | Format Example                  | Python Type
 // # -------|-----------------|---------------------------------|-------------
@@ -39,7 +43,8 @@ func Parse(r *bufio.Reader) (Value, error) {
       case '*':
           return parseArray(r)
       default:
-          return Value{}, nil
+          r.UnreadByte()
+          return parseInline(r)
 	}
 }
 
@@ -126,4 +131,21 @@ func parseSimpleString(r *bufio.Reader) (Value,error) {
 		return Value{}, err
 	}
 	return Value{Typ :"string",Str :line}, nil
+}
+
+// parseInline handles unframed commands like: PING\r\n or SET key val\r\n
+func parseInline(r *bufio.Reader) (Value, error) {
+	line, err := readLine(r)
+	if err != nil {
+		return Value{}, fmt.Errorf("inline parse error: %w", err)
+	}
+	parts := strings.Fields(line)
+	if len(parts) == 0 {
+		return Value{}, fmt.Errorf("empty inline command")
+	}
+	array := make([]Value, len(parts))
+	for i, p := range parts {
+		array[i] = Value{Typ: "bulk", Bulk: p}
+	}
+	return Value{Typ: "array", Array: array}, nil
 }
